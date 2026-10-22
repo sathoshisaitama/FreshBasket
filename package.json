@@ -1,0 +1,24 @@
+{
+  "name": "freshbasket",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+    "build": "npm run generate -w apps/api && npm run build -w apps/web",
+    "db:generate": "npm run generate -w apps/api",
+    "db:migrate": "npm run migrate -w apps/api",
+    "db:seed": "npm run seed -w apps/api",
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "start": "npm run start -w apps/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "supertest": "^7.1.0"
+  }
+}

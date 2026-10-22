@@ -1,0 +1,133 @@
+generator client {
+ provider = "prisma-client-js"
+}
+datasource db {
+ provider = "postgresql"
+}
+enum Role {
+ USER
+ ADMIN
+ DELIVERY_PARTNER
+}
+enum OrderStatus {
+ PENDING_PAYMENT
+ CONFIRMED
+ PACKING
+ READY
+ OUT_FOR_DELIVERY
+ DELIVERED
+ CANCELLED
+}
+enum PaymentMethod {
+ COD
+ STRIPE
+}
+enum PaymentStatus {
+ UNPAID
+ PAID
+}
+model User {
+ id String @id @default(uuid())
+ name String
+ email String @unique
+ passwordHash String
+ role Role @default(USER)
+ createdAt DateTime @default(now())
+ sessions Session[]
+ orders Order[]
+ partner DeliveryPartner?
+}
+model Session {
+ id String @id @default(uuid())
+ tokenHash String @unique
+ userId String
+ user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+ expiresAt DateTime
+ @@index([userId])
+}
+model Product {
+ id String @id @default(uuid())
+ name String
+ description String @default("")
+ category String
+ priceMinor Int
+ stock Int @default(0)
+ organic Boolean @default(false)
+ image String
+ unit String @default("pack")
+ active Boolean @default(true)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ items OrderItem[]
+ @@index([category, active])
+}
+model DeliveryPartner {
+ id String @id @default(uuid())
+ userId String @unique
+ user User @relation(fields:[userId], references:[id])
+ available Boolean @default(true)
+ orders Order[]
+}
+model Order {
+ id String @id @default(uuid())
+ userId String
+ user User @relation(fields:[userId], references:[id])
+ checkoutKey String
+ requestHash String
+ address Json
+ subtotalMinor Int
+ deliveryMinor Int
+ totalMinor Int
+ paymentMethod PaymentMethod
+ paymentStatus PaymentStatus @default(UNPAID)
+ status OrderStatus @default(CONFIRMED)
+ partnerId String?
+ partner DeliveryPartner? @relation(fields:[partnerId], references:[id])
+ stripeSessionId String? @unique
+ expiresAt DateTime
+ deliveryCode String
+ latitude Float?
+ longitude Float?
+ locationAt DateTime?
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ items OrderItem[]
+ history OrderHistory[]
+ @@unique([userId, checkoutKey])
+ @@index([status, partnerId])
+}
+model OrderItem {
+ id String @id @default(uuid())
+ orderId String
+ order Order @relation(fields:[orderId], references:[id])
+ productId String
+ product Product @relation(fields:[productId], references:[id])
+ name String
+ image String
+ priceMinor Int
+ quantity Int
+ @@unique([orderId,productId])
+}
+model OrderHistory {
+ id String @id @default(uuid())
+ orderId String
+ order Order @relation(fields:[orderId], references:[id])
+ status OrderStatus
+ note String
+ actorId String?
+ createdAt DateTime @default(now())
+ @@index([orderId,createdAt])
+}
+model WebhookEvent {
+ id String @id
+ createdAt DateTime @default(now())
+}
+model Notification {
+ id String @id @default(uuid())
+ key String @unique
+ recipient String
+ subject String
+ text String
+ sentAt DateTime?
+ createdAt DateTime @default(now())
+}

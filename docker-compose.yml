@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: freshbasket
+      POSTGRES_USER: freshbasket
+      POSTGRES_PASSWORD: local_dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - grocery_data:/var/lib/postgresql/data
+volumes:
+  grocery_data:
